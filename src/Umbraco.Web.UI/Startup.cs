@@ -34,6 +34,7 @@ namespace Umbraco.Cms.Web.UI
                 .AddWebsite()
                 .AddDeliveryApi()
                 .AddComposers()
+
                 .Build();
         }
 
