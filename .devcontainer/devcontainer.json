@@ -5,10 +5,10 @@
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspace",
-	
-	
+
+
 	// Set *default* container specific settings.json values on container create.
-	"settings": {		
+	"settings": {
 		"omnisharp.defaultLaunchSolution": "umbraco.sln",
 		"omnisharp.enableDecompilationSupport": true,
 		"omnisharp.enableRoslynAnalyzers": true
@@ -16,9 +16,9 @@
 
 	"features": {
 		// Workaround until the image is updated to include the latest version of .NET Core - .NET7
-		// https://github.com/devcontainers/templates/issues/38#issuecomment-1310803259		
-		"ghcr.io/devcontainers/features/dotnet:1": {
-			"version": "7"
+		// https://github.com/devcontainers/templates/issues/38#issuecomment-1310803259
+		"ghcr.io/devcontainers/features/dotnet:2": {
+			"additionalVersions": "lts"
 		},
 
 		// Adds SSH support to the container
@@ -36,7 +36,7 @@
 	"extensions": [
 		"ms-dotnettools.csharp"
 	],
-	
+
 	// This is used in the prebuilds - so dotnet build (nuget restore and node stuff) is done
 	"updateContentCommand": "dotnet build umbraco.sln && dotnet dev-certs https --trust",
 
@@ -78,7 +78,7 @@
 	//        dotnet dev-certs https --trust; dotnet dev-certs https -ep "$env:USERPROFILE/.aspnet/https/aspnetapp.pfx" -p "SecurePwdGoesHere"
 	//    * macOS/Linux terminal:
 	//        dotnet dev-certs https --trust; dotnet dev-certs https -ep "${HOME}/.aspnet/https/aspnetapp.pfx" -p "SecurePwdGoesHere"
-	// 
+	//
 	// 2. Uncomment these 'remoteEnv' lines:
 	//    "remoteEnv": {
 	// 	      "ASPNETCORE_Kestrel__Certificates__Default__Password": "SecurePwdGoesHere",
