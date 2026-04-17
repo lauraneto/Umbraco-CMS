@@ -1,0 +1,44 @@
+name: "SonarQube Cloud analysis"
+
+on:
+  push:
+    branches:
+      - "*/dev"
+      - "*/main"
+      - "main"
+      - "release/*"
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  SONAR_ORGANIZATION: "umbraco"
+  SONAR_PROJECT_KEY: "umbraco_Umbraco-CMS"
+
+jobs:
+  sonarqube:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v5
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Build and analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet-sonarscanner begin \
+            /k:"${{ env.SONAR_PROJECT_KEY }}" \
+            /o:"${{ env.SONAR_ORGANIZATION }}" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.inclusions="src/**,templates/**,tools/**" \
+            /d:sonar.exclusions="**/bin/**,**/obj/**,**/node_modules/**,**/*.gen.ts,**/*.test.ts,src/Umbraco.Cms.StaticAssets/wwwroot/umbraco/**,src/Umbraco.Web.UI.Client/dist-cms/**,src/Umbraco.Web.UI.Client/src/assets/lang/**,src/Umbraco.Web.UI.Login/src/localization/lang/**,src/Umbraco.Web.UI.Client/src/mocks/**,tests/**" \
+            /d:sonar.scm.disabled=true
+          dotnet build umbraco.sln -c SkipTests --no-incremental
+          dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
