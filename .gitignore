@@ -46,6 +46,7 @@ lib-bower
 NDependOut/
 QueryResult.htm
 tools/docfx/
+.sonarqube/
 
 # csharp-docs
 /build/csharp-docs/api/

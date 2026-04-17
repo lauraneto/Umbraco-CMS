@@ -1,0 +1,45 @@
+name: "SonarQube Cloud analysis"
+
+on: workflow_dispatch
+
+env:
+  SONAR_ORGANIZATION: "umbraco"
+  SONAR_PROJECT_KEY: "umbraco_Umbraco-CMS"
+
+jobs:
+  sonarqube:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@v5
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Begin analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet-sonarscanner begin \
+            /k:"${{ env.SONAR_PROJECT_KEY }}" \
+            /o:"${{ env.SONAR_ORGANIZATION }}" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.inclusions="src/**,templates/**,tools/**,tests/**" \
+            /d:sonar.exclusions="**/bin/**,**/obj/**,**/node_modules/**,**/*.gen.ts,src/Umbraco.Cms.StaticAssets/wwwroot/umbraco/**,src/Umbraco.Web.UI.Client/dist-cms/**,src/Umbraco.Web.UI.Client/src/assets/lang/**,src/Umbraco.Web.UI.Login/src/localization/lang/**,src/Umbraco.Web.UI.Client/src/mocks/**" \
+            /d:sonar.test.inclusions="tests/**,**/*.test.ts,**/*.spec.ts" \
+            /d:sonar.javascript.exclusions="**/node_modules/**,src/Umbraco.Cms.StaticAssets/wwwroot/**,src/Umbraco.Web.UI.Client/dist-cms/**" \
+            /d:sonar.typescript.tsconfigPaths="src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json" \
+            /d:sonar.scm.disabled=true
+
+      - name: Build solution
+        run: dotnet build umbraco.sln -clp:ErrorsOnly
+
+      - name: End analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
