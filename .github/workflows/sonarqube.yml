@@ -25,8 +25,17 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Install SonarQube scanner
-        run: dotnet tool install --global dotnet-sonarscanner
+      - name: Install tools
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global nbgv
+
+      - name: Get project version
+        run: |
+          PUBLIC_RELEASE=$(nbgv get-version -v PublicRelease)
+          if [ "$PUBLIC_RELEASE" = "True" ]; then
+            echo "PROJECT_VERSION=$(nbgv get-version -v NuGetPackageVersion)" >> $GITHUB_ENV
+          fi
 
       - name: Begin analysis
         env:
@@ -41,7 +50,8 @@ jobs:
             /d:sonar.test.inclusions="tests/**,**/*.test.ts,**/*.spec.ts" \
             /d:sonar.javascript.exclusions="**/node_modules/**,**/wwwroot/**,**/dist-cms/**" \
             /d:sonar.typescript.tsconfigPaths="src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json" \
-            /d:sonar.scm.disabled=true
+            /d:sonar.scm.disabled=true \
+            ${PROJECT_VERSION:+/d:sonar.projectVersion="$PROJECT_VERSION"}
 
       - name: Build solution
         run: dotnet build umbraco.sln -clp:ErrorsOnly
