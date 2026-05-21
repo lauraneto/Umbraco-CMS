@@ -18,7 +18,14 @@ jobs:
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v5
 
-      - name: Install SonarScanner for .NET
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Install SonarQube scanner
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: Begin analysis
@@ -34,6 +41,7 @@ jobs:
             /d:sonar.test.inclusions="tests/**,**/*.test.ts,**/*.spec.ts" \
             /d:sonar.javascript.exclusions="**/node_modules/**,src/Umbraco.Cms.StaticAssets/wwwroot/**,src/Umbraco.Web.UI.Client/dist-cms/**" \
             /d:sonar.typescript.tsconfigPaths="src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json" \
+            /d:sonar.scanner.skipJreProvisioning=true \
             /d:sonar.scm.disabled=true
 
       - name: Build solution
