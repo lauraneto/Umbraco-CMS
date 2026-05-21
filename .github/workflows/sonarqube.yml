@@ -42,7 +42,6 @@ jobs:
             /d:sonar.javascript.exclusions="**/node_modules/**,src/Umbraco.Cms.StaticAssets/wwwroot/**,src/Umbraco.Web.UI.Client/dist-cms/**" \
             /d:sonar.typescript.tsconfigPaths="src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json" \
             /d:sonar.projectBaseDir="." \
-            /d:sonar.scanner.skipJreProvisioning=true \
             /d:sonar.scm.disabled=true
 
       - name: Build solution
