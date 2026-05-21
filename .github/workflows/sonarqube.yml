@@ -29,6 +29,7 @@ jobs:
         run: |
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global nbgv
+          dotnet tool install --global dotnet-coverage
 
       - name: Get project version
         run: |
@@ -50,11 +51,19 @@ jobs:
             /d:sonar.test.inclusions="tests/**,**/*.test.ts,**/*.spec.ts" \
             /d:sonar.javascript.exclusions="**/node_modules/**,**/wwwroot/**,**/dist-cms/**" \
             /d:sonar.typescript.tsconfigPaths="src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/coverage.xml" \
             /d:sonar.scm.disabled=true \
             ${PROJECT_VERSION:+/d:sonar.projectVersion="$PROJECT_VERSION"}
 
       - name: Build solution
         run: dotnet build umbraco.sln -clp:ErrorsOnly
+
+      - name: Run unit tests with coverage
+        run: |
+          dotnet-coverage collect \
+            "dotnet test tests/Umbraco.Tests.UnitTests/Umbraco.Tests.UnitTests.csproj --no-build" \
+            --output TestResults/coverage.xml \
+            --output-format xml
 
       - name: End analysis
         env:
