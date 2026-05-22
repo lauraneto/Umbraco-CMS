@@ -38,6 +38,10 @@ jobs:
             echo "PROJECT_VERSION=$(nbgv get-version -v NuGetPackageVersion)" >> $GITHUB_ENV
           fi
 
+      - name: Set branch name
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+
       - name: Begin analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -47,6 +51,7 @@ jobs:
             /o:"${{ env.SONAR_ORGANIZATION }}" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/coverage.xml" \
+            ${BRANCH_NAME:+/d:sonar.branch.name="$BRANCH_NAME"} \
             ${PROJECT_VERSION:+/d:sonar.projectVersion="$PROJECT_VERSION"}
 
       - name: Build solution
