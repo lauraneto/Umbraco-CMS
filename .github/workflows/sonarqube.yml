@@ -46,13 +46,7 @@ jobs:
             /k:"${{ env.SONAR_PROJECT_KEY }}" \
             /o:"${{ env.SONAR_ORGANIZATION }}" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.inclusions="src/**,templates/**,tools/**,tests/**" \
-            /d:sonar.exclusions="**/bin/**,**/obj/**,**/node_modules/**,**/wwwroot/**,**/dist-cms/**,**/*.gen.ts,src/Umbraco.Web.UI.Client/src/assets/lang/**,src/Umbraco.Web.UI.Login/src/localization/lang/**,src/Umbraco.Web.UI.Client/src/mocks/**" \
-            /d:sonar.test.inclusions="tests/**,**/*.test.ts,**/*.spec.ts" \
-            /d:sonar.javascript.exclusions="**/node_modules/**,**/wwwroot/**,**/dist-cms/**" \
-            /d:sonar.typescript.tsconfigPaths="src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json" \
             /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/coverage.xml" \
-            /d:sonar.scm.disabled=true \
             ${PROJECT_VERSION:+/d:sonar.projectVersion="$PROJECT_VERSION"}
 
       - name: Build solution
