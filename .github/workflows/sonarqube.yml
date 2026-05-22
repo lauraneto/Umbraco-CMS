@@ -17,6 +17,9 @@ jobs:
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v5
+        with:
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
 
       - name: Cache SonarQube packages
         uses: actions/cache@v5
@@ -54,8 +57,11 @@ jobs:
             ${BRANCH_NAME:+/d:sonar.branch.name="$BRANCH_NAME"} \
             ${PROJECT_VERSION:+/d:sonar.projectVersion="$PROJECT_VERSION"}
 
+      - name: Restore
+        run: dotnet restore umbraco.sln --locked-mode
+
       - name: Build solution
-        run: dotnet build umbraco.sln -clp:ErrorsOnly
+        run: dotnet build umbraco.sln --no-restore -clp:ErrorsOnly
 
       - name: Run unit tests with coverage
         run: |
