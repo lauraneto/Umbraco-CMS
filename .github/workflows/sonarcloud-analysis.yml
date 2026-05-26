@@ -14,30 +14,65 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
+      - name: Download analysis context
+        uses: actions/download-artifact@v4
+        with:
+          name: analysis-context
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: analysis-context
+
+      - name: Download analysis data
+        uses: actions/download-artifact@v4
+        with:
+          name: analysis-data
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: analysis-data
+
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-
-      - name: Download analysis artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: sonar-analysis-data
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: .
+          fetch-depth: 0
 
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v5
 
-      - name: Restore sonar cache
-        run: |
-          mkdir -p ~/.sonar
-          mv .sonar-cache ~/.sonar/cache
-
       - name: Install sonarscanner
         run: dotnet tool install --global dotnet-sonarscanner
 
+      - name: Set analysis context
+        run: |
+          EVENT=$(cat analysis-context/event)
+          echo "event=$EVENT"
+          echo "PROJECT_VERSION=$(cat analysis-context/project-version)" | tee -a $GITHUB_ENV
+          if [ "$EVENT" = "pull_request" ]; then
+            echo "PR_NUMBER=$(cat analysis-context/pr-number)" | tee -a $GITHUB_ENV
+            echo "PR_HEAD_REF=$(cat analysis-context/pr-head-ref)" | tee -a $GITHUB_ENV
+            echo "PR_BASE_REF=$(cat analysis-context/pr-base-ref)" | tee -a $GITHUB_ENV
+          else
+            echo "BRANCH_NAME=$(cat analysis-context/branch-name)" | tee -a $GITHUB_ENV
+          fi
+
+      - name: Begin analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet-sonarscanner begin \
+            /d:sonar.token="$SONAR_TOKEN" \
+            ${BRANCH_NAME:+/d:sonar.branch.name="$BRANCH_NAME"} \
+            ${PROJECT_VERSION:+/d:sonar.projectVersion="$PROJECT_VERSION"} \
+            ${PR_NUMBER:+/d:sonar.pullrequest.key="$PR_NUMBER"} \
+            ${PR_HEAD_REF:+/d:sonar.pullrequest.branch="$PR_HEAD_REF"} \
+            ${PR_BASE_REF:+/d:sonar.pullrequest.base="$PR_BASE_REF"}
+
+      - name: Restore analysis data from build
+        run: |
+          rm -rf .sonarqube/out
+          cp -r analysis-data/.sonarqube/out .sonarqube/out
+          cp -r analysis-data/TestResults TestResults
+
       - name: End analysis
         env:
-          SONARQUBE_SCANNER_PARAMS: '{"sonar.token":"${{ secrets.SONAR_TOKEN }}"}'
-        run: dotnet-sonarscanner end
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet-sonarscanner end /d:sonar.token="$SONAR_TOKEN"
