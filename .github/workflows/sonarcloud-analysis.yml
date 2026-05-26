@@ -29,12 +29,10 @@ jobs:
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v5
 
-      - name: Cache SonarQube packages
-        uses: actions/cache@v5
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+      - name: Restore sonar cache
+        run: |
+          mkdir -p ~/.sonar
+          mv .sonar-cache ~/.sonar/cache
 
       - name: Install sonarscanner
         run: dotnet tool install --global dotnet-sonarscanner

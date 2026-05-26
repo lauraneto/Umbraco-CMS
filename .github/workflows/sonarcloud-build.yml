@@ -26,13 +26,6 @@ jobs:
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v5
 
-      - name: Cache SonarQube packages
-        uses: actions/cache@v5
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
       - name: Install tools
         run: |
           dotnet tool install --global dotnet-sonarscanner
@@ -78,6 +71,9 @@ jobs:
             --output TestResults/coverage.xml \
             --output-format xml
 
+      - name: Copy sonar cache for artifact
+        run: cp -r ~/.sonar/cache .sonar-cache
+
       - name: Upload analysis artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -86,4 +82,5 @@ jobs:
           path: |
             .sonarqube/
             TestResults/
+            .sonar-cache/
           retention-days: 1
