@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download analysis context
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: analysis-context
           run-id: ${{ github.event.workflow_run.id }}
@@ -32,7 +32,7 @@ jobs:
           path: analysis-context
 
       - name: Download analysis data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: analysis-data
           run-id: ${{ github.event.workflow_run.id }}
