@@ -50,7 +50,7 @@ jobs:
             /o:"${{ env.SONAR_ORGANIZATION }}" \
             /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/coverage.xml" \
             /d:sonar.inclusions="src/**,templates/**,tools/**,tests/**" \
-            /d:sonar.exclusions="**/bin/**,**/obj/**,**/node_modules/**,**/lang/*.ts,**/mocks/**,**/wwwroot/**,**/dist-cms/**,**/*.generated.cs,src/Umbraco.Web.UI/umbraco/**,src/Umbraco.Cms.Persistence.EFCore.*/Migrations/**,src/Umbraco.Web.UI.Client/src/packages/core/backend-api/**" \
+            /d:sonar.exclusions="**/bin/**,**/obj/**,**/node_modules/**,**/lang/*.ts,**/mocks/**,**/wwwroot/**,**/dist-cms/**,**/*.generated.cs,src/Umbraco.Web.UI/umbraco/**,src/Umbraco.Cms.Persistence.EFCore.*/Migrations/**,src/Umbraco.Web.UI.Client/src/packages/core/backend-api/**,**/.nuget/**" \
             /d:sonar.test.inclusions="tests/**,**/*.test.ts,**/*.spec.ts" \
             /d:sonar.coverage.exclusions="src/Umbraco.Web.UI.Client/**,src/Umbraco.Web.UI.Login/**" \
             /d:sonar.typescript.tsconfigPaths="src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json" \
