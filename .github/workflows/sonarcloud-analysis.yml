@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+env:
+  SONAR_PROJECT_KEY: umbraco_Umbraco-CMS
+  SONAR_ORGANIZATION: umbraco
+
 jobs:
   analyze:
     name: Upload analysis
@@ -46,6 +50,7 @@ jobs:
           EVENT=$(cat analysis-context/event)
           echo "event=$EVENT"
           echo "PROJECT_VERSION=$(cat analysis-context/project-version)" | tee -a $GITHUB_ENV
+          echo "SONARQUBE_SCANNER_PARAMS=$(cat analysis-context/sonar-params.json)" | tee -a $GITHUB_ENV
           if [ "$EVENT" = "pull_request" ]; then
             echo "PR_NUMBER=$(cat analysis-context/pr-number)" | tee -a $GITHUB_ENV
             echo "PR_HEAD_REF=$(cat analysis-context/pr-head-ref)" | tee -a $GITHUB_ENV
@@ -59,6 +64,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin \
+            /k:"$SONAR_PROJECT_KEY" \
+            /o:"$SONAR_ORGANIZATION" \
             /d:sonar.token="$SONAR_TOKEN" \
             ${BRANCH_NAME:+/d:sonar.branch.name="$BRANCH_NAME"} \
             ${PROJECT_VERSION:+/d:sonar.projectVersion="$PROJECT_VERSION"} \

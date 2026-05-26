@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+env:
+  SONAR_PROJECT_KEY: umbraco_Umbraco-CMS
+  SONAR_ORGANIZATION: umbraco
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -14,6 +18,8 @@ jobs:
   build:
     name: Build and collect analysis data
     runs-on: ubuntu-latest
+    env:
+      SONARQUBE_SCANNER_PARAMS: '{"sonar.cs.vscoveragexml.reportsPaths":"TestResults/coverage.xml","sonar.inclusions":"src/**,templates/**,tools/**,tests/**","sonar.exclusions":"**/bin/**,**/obj/**,**/node_modules/**,**/lang/*.ts,**/mocks/**,**/wwwroot/**,**/dist-cms/**,**/*.generated.cs,src/Umbraco.Web.UI/umbraco/**,src/Umbraco.Cms.Persistence.EFCore.*/Migrations/**,src/Umbraco.Web.UI.Client/src/packages/core/backend-api/**,**/.nuget/**","sonar.test.inclusions":"tests/**,**/*.test.ts,**/*.spec.ts","sonar.coverage.exclusions":"src/Umbraco.Web.UI.Client/**,src/Umbraco.Web.UI.Login/**","sonar.typescript.tsconfigPaths":"src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json","sonar.scm.disabled":"true"}'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -40,6 +46,7 @@ jobs:
           mkdir -p analysis-context
           echo "${{ github.event_name }}" > analysis-context/event
           echo "${PROJECT_VERSION}" > analysis-context/project-version
+          echo "${SONARQUBE_SCANNER_PARAMS}" > analysis-context/sonar-params.json
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "${{ github.event.pull_request.number }}" > analysis-context/pr-number
             echo "${{ github.event.pull_request.head.ref }}" > analysis-context/pr-head-ref
@@ -56,7 +63,10 @@ jobs:
           retention-days: 1
 
       - name: Begin analysis
-        run: dotnet-sonarscanner begin
+        run: |
+          dotnet-sonarscanner begin \
+            /k:"$SONAR_PROJECT_KEY" \
+            /o:"$SONAR_ORGANIZATION"
 
       - name: Restore
         run: dotnet restore umbraco.sln
