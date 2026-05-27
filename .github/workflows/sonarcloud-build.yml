@@ -55,9 +55,7 @@ jobs:
         run: dotnet restore umbraco.sln
 
       - name: Build solution
-        env:
-          LC_ALL: en_US.UTF-8 # prevents sonar MSBuild integration from writing a malformed timestamp to $GITHUB_ENV
-        run: dotnet build umbraco.sln --no-restore -clp:ErrorsOnly
+        run: GITHUB_ENV=/dev/null dotnet build umbraco.sln --no-restore -clp:ErrorsOnly # prevent sonar MSBuild integration from writing malformed values to $GITHUB_ENV
 
       - name: Run unit tests with coverage
         run: |
