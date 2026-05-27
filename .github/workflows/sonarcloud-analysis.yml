@@ -1,5 +1,11 @@
 name: "SonarQube Cloud - Analysis"
 
+# This workflow runs after the build workflow completes. It downloads the
+# Roslyn analysis output and coverage data produced by the build, then uploads
+# them to SonarCloud using the SONAR_TOKEN secret. Because it is triggered via
+# workflow_run, it always runs in the base repository context - even for fork
+# PRs - giving it safe access to secrets.
+
 on:
   workflow_run:
     workflows: ["SonarQube Cloud - Build"]
@@ -16,11 +22,11 @@ jobs:
   analyze:
     name: Upload analysis
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success' # only run if the build succeeded
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha }} # checkout at the commit that triggered the build
           fetch-depth: 0
 
       - name: Download analysis data
@@ -43,12 +49,12 @@ jobs:
         run: |
           IS_FORK="${{ github.event.workflow_run.head_repository.full_name != github.repository }}"
           if [ "$IS_FORK" = "true" ]; then
-            echo "SONARQUBE_SCANNER_PARAMS=$(git show origin/main:.github/workflows/sonarcloud/sonar-params.json | jq -c .)" | tee -a $GITHUB_ENV
+            echo "SONARQUBE_SCANNER_PARAMS=$(git show origin/main:.github/workflows/sonarcloud/sonar-params.json | jq -c .)" | tee -a $GITHUB_ENV # read from main for fork PRs
           else
             echo "SONARQUBE_SCANNER_PARAMS=$(jq -c . .github/workflows/sonarcloud/sonar-params.json)" | tee -a $GITHUB_ENV
             PUBLIC_RELEASE=$(nbgv get-version -v PublicRelease)
             if [ "$PUBLIC_RELEASE" = "True" ]; then
-              echo "PROJECT_VERSION=$(nbgv get-version -v NuGetPackageVersion)" | tee -a $GITHUB_ENV
+              echo "PROJECT_VERSION=$(nbgv get-version -v NuGetPackageVersion)" | tee -a $GITHUB_ENV # only set for official releases
             fi
           fi
           if [ "${{ github.event.workflow_run.event }}" = "pull_request" ]; then
