@@ -18,8 +18,6 @@ jobs:
   build:
     name: Build and collect analysis data
     runs-on: ubuntu-latest
-    env:
-      SONARQUBE_SCANNER_PARAMS: '{"sonar.cs.vscoveragexml.reportsPaths":"TestResults/coverage.xml","sonar.inclusions":"src/**,templates/**,tools/**,tests/**","sonar.exclusions":"**/bin/**,**/obj/**,**/node_modules/**,**/lang/*.ts,**/mocks/**,**/wwwroot/**,**/dist-cms/**,**/*.generated.cs,src/Umbraco.Web.UI/umbraco/**,src/Umbraco.Cms.Persistence.EFCore.*/Migrations/**,src/Umbraco.Web.UI.Client/src/packages/core/backend-api/**,**/.nuget/**","sonar.test.inclusions":"tests/**,**/*.test.ts,**/*.spec.ts","sonar.coverage.exclusions":"src/Umbraco.Web.UI.Client/**,src/Umbraco.Web.UI.Login/**","sonar.typescript.tsconfigPaths":"src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json","sonar.scm.disabled":"true"}'
     steps:
       - uses: actions/checkout@v6
         with:
@@ -31,36 +29,15 @@ jobs:
       - name: Install tools
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          dotnet tool install --global nbgv
           dotnet tool install --global dotnet-coverage
 
-      - name: Get project version
+      - name: Load sonar params
         run: |
-          PUBLIC_RELEASE=$(nbgv get-version -v PublicRelease)
-          if [ "$PUBLIC_RELEASE" = "True" ]; then
-            echo "PROJECT_VERSION=$(nbgv get-version -v NuGetPackageVersion)" >> $GITHUB_ENV
-          fi
-
-      - name: Save analysis context
-        run: |
-          mkdir -p analysis-context
-          echo "${{ github.event_name }}" > analysis-context/event
-          echo "${PROJECT_VERSION}" > analysis-context/project-version
-          echo "${SONARQUBE_SCANNER_PARAMS}" > analysis-context/sonar-params.json
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "${{ github.event.pull_request.number }}" > analysis-context/pr-number
-            echo "${{ github.event.pull_request.head.ref }}" > analysis-context/pr-head-ref
-            echo "${{ github.event.pull_request.base.ref }}" > analysis-context/pr-base-ref
+          if [ "${{ github.event.pull_request.head.repo.fork }}" = "true" ]; then
+            echo "SONARQUBE_SCANNER_PARAMS=$(git show origin/main:.github/workflows/sonarcloud/sonar-params.json | jq -c .)" >> $GITHUB_ENV
           else
-            echo "${{ github.ref_name }}" > analysis-context/branch-name
+            echo "SONARQUBE_SCANNER_PARAMS=$(jq -c . .github/workflows/sonarcloud/sonar-params.json)" >> $GITHUB_ENV
           fi
-
-      - name: Upload analysis context
-        uses: actions/upload-artifact@v7
-        with:
-          name: analysis-context
-          path: analysis-context/
-          retention-days: 1
 
       - name: Begin analysis
         run: |

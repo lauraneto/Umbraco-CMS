@@ -23,14 +23,6 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
-      - name: Download analysis context
-        uses: actions/download-artifact@v8
-        with:
-          name: analysis-context
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path: analysis-context
-
       - name: Download analysis data
         uses: actions/download-artifact@v8
         with:
@@ -43,20 +35,28 @@ jobs:
         uses: actions/setup-dotnet@v5
 
       - name: Install sonarscanner
-        run: dotnet tool install --global dotnet-sonarscanner
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global nbgv
 
       - name: Set analysis context
         run: |
-          EVENT=$(cat analysis-context/event)
-          echo "event=$EVENT"
-          echo "PROJECT_VERSION=$(cat analysis-context/project-version)" | tee -a $GITHUB_ENV
-          echo "SONARQUBE_SCANNER_PARAMS=$(cat analysis-context/sonar-params.json)" | tee -a $GITHUB_ENV
-          if [ "$EVENT" = "pull_request" ]; then
-            echo "PR_NUMBER=$(cat analysis-context/pr-number)" | tee -a $GITHUB_ENV
-            echo "PR_HEAD_REF=$(cat analysis-context/pr-head-ref)" | tee -a $GITHUB_ENV
-            echo "PR_BASE_REF=$(cat analysis-context/pr-base-ref)" | tee -a $GITHUB_ENV
+          IS_FORK="${{ github.event.workflow_run.head_repository.full_name != github.repository }}"
+          if [ "$IS_FORK" = "true" ]; then
+            echo "SONARQUBE_SCANNER_PARAMS=$(git show origin/main:.github/workflows/sonarcloud/sonar-params.json | jq -c .)" | tee -a $GITHUB_ENV
           else
-            echo "BRANCH_NAME=$(cat analysis-context/branch-name)" | tee -a $GITHUB_ENV
+            echo "SONARQUBE_SCANNER_PARAMS=$(jq -c . .github/workflows/sonarcloud/sonar-params.json)" | tee -a $GITHUB_ENV
+            PUBLIC_RELEASE=$(nbgv get-version -v PublicRelease)
+            if [ "$PUBLIC_RELEASE" = "True" ]; then
+              echo "PROJECT_VERSION=$(nbgv get-version -v NuGetPackageVersion)" | tee -a $GITHUB_ENV
+            fi
+          fi
+          if [ "${{ github.event.workflow_run.event }}" = "pull_request" ]; then
+            echo "PR_NUMBER=${{ github.event.workflow_run.pull_requests[0].number }}" | tee -a $GITHUB_ENV
+            echo "PR_HEAD_REF=${{ github.event.workflow_run.pull_requests[0].head.ref }}" | tee -a $GITHUB_ENV
+            echo "PR_BASE_REF=${{ github.event.workflow_run.pull_requests[0].base.ref }}" | tee -a $GITHUB_ENV
+          else
+            echo "BRANCH_NAME=${{ github.event.workflow_run.head_branch }}" | tee -a $GITHUB_ENV
           fi
 
       - name: Begin analysis
