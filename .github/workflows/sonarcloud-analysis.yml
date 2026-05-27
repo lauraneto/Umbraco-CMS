@@ -40,6 +40,13 @@ jobs:
       - name: Setup .NET from global.json
         uses: actions/setup-dotnet@v5
 
+      - name: Cache SonarQube packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: Install sonarscanner
         run: |
           dotnet tool install --global dotnet-sonarscanner
@@ -81,8 +88,7 @@ jobs:
 
       - name: Restore analysis data from build
         run: |
-          rm -rf .sonarqube/out
-          cp -r analysis-data/.sonarqube/out .sonarqube/out
+          cp -r analysis-data/.sonarqube/out/. .sonarqube/out/
           cp -r analysis-data/.sonarqube/conf/[0-9]* .sonarqube/conf/
           cp -r analysis-data/TestResults TestResults
 
