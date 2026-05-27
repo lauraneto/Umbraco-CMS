@@ -24,11 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success' # only run if the build succeeded
     steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }} # checkout at the commit that triggered the build
-          fetch-depth: 0
-
       - name: Download analysis data
         uses: actions/download-artifact@v8
         with:
@@ -50,7 +45,6 @@ jobs:
       - name: Install sonarscanner
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          dotnet tool install --global nbgv
 
       - name: Set analysis context
         run: |
@@ -59,10 +53,6 @@ jobs:
             echo "SONARQUBE_SCANNER_PARAMS=$(git show origin/main:.github/workflows/sonarcloud/sonar-params.json | jq -c .)" | tee -a $GITHUB_ENV # read from main for fork PRs
           else
             echo "SONARQUBE_SCANNER_PARAMS=$(jq -c . .github/workflows/sonarcloud/sonar-params.json)" | tee -a $GITHUB_ENV
-            PUBLIC_RELEASE=$(nbgv get-version -v PublicRelease)
-            if [ "$PUBLIC_RELEASE" = "True" ]; then
-              echo "PROJECT_VERSION=$(nbgv get-version -v NuGetPackageVersion)" | tee -a $GITHUB_ENV # only set for official releases
-            fi
           fi
           if [ "${{ github.event.workflow_run.event }}" = "pull_request" ]; then
             echo "PR_NUMBER=${{ github.event.workflow_run.pull_requests[0].number }}" | tee -a $GITHUB_ENV
@@ -81,7 +71,6 @@ jobs:
             /o:"$SONAR_ORGANIZATION" \
             /d:sonar.token="$SONAR_TOKEN" \
             ${BRANCH_NAME:+/d:sonar.branch.name="$BRANCH_NAME"} \
-            ${PROJECT_VERSION:+/d:sonar.projectVersion="$PROJECT_VERSION"} \
             ${PR_NUMBER:+/d:sonar.pullrequest.key="$PR_NUMBER"} \
             ${PR_HEAD_REF:+/d:sonar.pullrequest.branch="$PR_HEAD_REF"} \
             ${PR_BASE_REF:+/d:sonar.pullrequest.base="$PR_BASE_REF"}
