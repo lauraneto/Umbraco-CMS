@@ -5,5 +5,6 @@
   "sonar.test.inclusions": "tests/**,**/*.test.ts,**/*.spec.ts",
   "sonar.coverage.exclusions": "src/Umbraco.Web.UI.Client/**,src/Umbraco.Web.UI.Login/**",
   "sonar.typescript.tsconfigPaths": "src/Umbraco.Web.UI.Client/tsconfig.json,src/Umbraco.Web.UI.Client/tsconfig.node.json,src/Umbraco.Web.UI.Login/tsconfig.json",
-  "sonar.scm.disabled": "true"
+  "sonar.scm.disabled": "true",
+  "sonar.scanner.skipJreProvisioning": "true"
 }
