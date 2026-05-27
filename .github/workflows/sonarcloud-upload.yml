@@ -24,14 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success' # only run if the build succeeded
     steps:
-      - name: Checkout sonar params
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_repository.full_name != github.repository && github.event.repository.default_branch || github.event.workflow_run.head_sha }}
-          sparse-checkout: |
-            .github/workflows/sonarcloud/sonar-params.json
-            **/*.csproj
-          sparse-checkout-cone-mode: false
 
       - name: Download analysis data
         uses: actions/download-artifact@v8
